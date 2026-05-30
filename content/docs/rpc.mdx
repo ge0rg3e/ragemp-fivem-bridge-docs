@@ -1,0 +1,43 @@
+---
+title: RPC
+description: Cross-context procedure calls between server, client, and browser runtimes.
+---
+
+## What Is Included
+
+Bridge ships a vendored `rage-rpc` runtime and mounts it on `mp.rpc` (server, client, CEF).
+
+Supported capabilities include:
+
+- `register` / `unregister`
+- `callServer`, `callClient`, `callBrowser`, `callBrowsers`
+- `trigger*` fire-and-forget variants
+- optional timeout and `noRet`
+- debug mode via `setDebugMode(true)`
+
+## Example
+
+```js
+// server
+mp.rpc.register("bank:getBalance", async (_args, { player }) => {
+  return 1250;
+});
+
+// client or browser
+const balance = await mp.rpc.callServer("bank:getBalance", null, { timeout: 5000 });
+```
+
+## Large Payloads and Entity Serialization
+
+- Large serialized messages are chunked and reassembled.
+- Many `mp` entity values are serialized by type/id and rehydrated on the other side.
+
+## Security and Access Control
+
+If `ragemp_rpc_allowlist` is set, server rejects unlisted RPC names.
+
+Example convar:
+
+```ini
+setr ragemp_rpc_allowlist "bank:getBalance bank:deposit"
+```

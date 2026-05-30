@@ -1,0 +1,41 @@
+---
+title: Troubleshooting
+description: Fast diagnosis for the most common migration and runtime errors.
+---
+
+## `mp is not defined`
+
+- Standalone: missing `@ragemp-fivem-bridge/server.js` or client counterpart in manifest.
+- Standalone: bridge script not listed first.
+- Standalone: missing `ensure ragemp-fivem-bridge` before gamemode.
+
+## Browser or UI Not Working
+
+- `ui_page` path wrong.
+- missing files in `files {}`.
+- `_bridge.js` not loaded in page.
+- cross-resource page loaded without runtime script.
+
+## RPC Timeouts
+
+- procedure not registered on target side.
+- handler threw before returning.
+- payload too large/slow and timeout too short.
+- blocked by `ragemp_rpc_allowlist`.
+
+## Remote Eval / Invoke Not Working
+
+Expected by default. Enable only if needed:
+
+```ini
+setr ragemp_allow_remote_eval 1
+setr ragemp_allow_remote_invoke 1
+```
+
+## Screenshot Returns `null`
+
+Install and ensure `screenshot-basic`:
+
+```ini
+ensure screenshot-basic
+```

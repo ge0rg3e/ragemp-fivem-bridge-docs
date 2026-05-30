@@ -1,0 +1,25 @@
+---
+title: Server Runtime
+description: Server-side mp API behavior, lifecycle, and production guidance.
+---
+
+## What Server Runtime Provides
+
+- Entity pools (`mp.players`, `mp.vehicles`, `mp.objects`, etc.)
+- Event system (`mp.events.add`, `addCommand`, `addProc`)
+- World controls (`mp.world.time`, `mp.world.weather`)
+- Config access (`mp.config`)
+- RPC endpoint (`mp.rpc`)
+- Built-in plugin system (`mp.plugins`)
+
+## Player Lifecycle Notes
+
+`mp.players` entities are created during player connect/join and removed on drop.
+
+Pending proc calls are cancelled when a player disconnects.
+
+## Server-Side Batching
+
+`mp.network.startBatch()` temporarily queues `emitNet` calls and flushes on `endBatch()`.
+
+Use this for controlled bursts, but always pair start/end to avoid delayed sends.

@@ -1,0 +1,25 @@
+---
+title: Migrating from RAGE:MP
+description: Map packages/client_packages patterns to FiveM resource structures cleanly.
+---
+
+## Common Source Layout
+
+- `packages/<gamemode>/...` for server
+- `client_packages/...` for client
+
+## Migration Strategy
+
+If your project is module-graph heavy (`require`/`import` entrypoint):
+
+- Point config to server/client entry files.
+
+If your project is mostly flat scripts registering handlers on global `mp`:
+
+- Use standalone mode.
+- List files in `fxmanifest.lua` in load order.
+
+## Practical Rule
+
+If files depend on each other at import-time, bundle.
+If files are mostly handler registration side effects, standalone is usually enough.

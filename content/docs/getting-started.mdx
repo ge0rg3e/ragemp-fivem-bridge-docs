@@ -1,0 +1,133 @@
+---
+title: Getting Started
+description: Install the bridge as a shared FiveM resource and run your RAGE:MP gamemode with @-imports.
+---
+
+import { File, Folder, Files } from 'fumadocs-ui/components/files';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+This guide explains how to install `ragemp-fivem-bridge` as a shared FiveM resource and run your RAGE:MP gamemode using `@` imports.
+
+## Prerequisites
+
+Before you start, make sure you have:
+
+- A working FiveM server.
+- An existing RAGE:MP gamemode.
+- Access to your FiveM `resources` folder.
+- A built version of your TypeScript gamemode, if your project uses TypeScript.
+
+<Steps>
+  <Step>
+    ## Download the bridge
+
+    Download `ragemp-fivem-bridge-vx.x.x.zip` from the [latest release](https://github.com/adriantandara/ragemp-fivem-bridge/releases/latest).
+
+    Unzip the archive and place the extracted `ragemp-fivem-bridge` folder inside your FiveM `resources` folder.
+  </Step>
+
+  <Step>
+    ## Create your gamemode resource
+
+    Inside the `resources` folder, create a new folder for your gamemode. For example:
+
+    ```txt
+    resources/gamemode
+    ```
+
+    Then create an `fxmanifest.lua` file inside `resources/gamemode`:
+
+    ```lua title="fxmanifest.lua"
+    fx_version 'cerulean'
+    game 'gta5'
+
+    server_scripts {
+      '@ragemp-fivem-bridge/server.js',
+      'server/index.js'
+    }
+
+    client_scripts {
+      '@ragemp-fivem-bridge/client.js',
+      'client/index.js'
+    }
+    ```
+
+    The `@ragemp-fivem-bridge/...` imports load the bridge before your gamemode scripts.
+  </Step>
+
+  <Step>
+    ## Copy your RAGE:MP gamemode files
+
+    Copy your built RAGE:MP gamemode files into `resources/gamemode`.
+
+    If your gamemode is written in TypeScript, build it first, then copy the compiled output.
+
+    If your gamemode is not written in TypeScript, rename the folders before copying them:
+
+    - Rename `packages` to `server`.
+    - Rename `client_packages` to `client`.
+
+    Your copied files should be placed here:
+
+    ```txt
+    resources/gamemode/server
+    resources/gamemode/client
+    ```
+  </Step>
+
+  <Step>
+    ## Configure NUI/CEF support
+
+    Inside `resources/gamemode`, create a `ui` folder.
+
+    Then create a `host.html` file inside `resources/gamemode/ui`:
+
+    ```html title="host.html"
+    <!doctype html>
+    <html>
+      <body>
+        <script src="https://cfx-nui-ragemp-fivem-bridge/ui/_bridge.js"></script>
+      </body>
+    </html>
+    ```
+
+    This file enables `mp.browsers.new(...)` to work through FiveM NUI.
+  </Step>
+
+  <Step>
+    ## Start the bridge and gamemode
+
+    Add both resources to your `server.cfg`:
+
+    ```txt title="server.cfg"
+    ensure ragemp-fivem-bridge
+    ensure gamemode
+    ```
+
+    Keep this order. The bridge must start before your gamemode.
+  </Step>
+</Steps>
+
+## Final folder structure
+
+After completing the setup, your gamemode resource should look like this:
+
+<Folder name="resources" defaultOpen>
+<Folder name="ragemp-fivem-bridge">
+</Folder>
+
+<Folder name="gamemode" defaultOpen>
+<File name="fxmanifest.lua" />
+<Folder name="server" />
+<Folder name="client" />
+<Folder name="ui">
+    <File name="host.html" />
+</Folder>
+</Folder>
+</Folder>
+
+## Next steps
+
+You can now start your FiveM server and test your RAGE:MP gamemode through the bridge.
+
+If the resource does not start correctly, check your server console for script loading errors and confirm that `ragemp-fivem-bridge` is started before `gamemode`.

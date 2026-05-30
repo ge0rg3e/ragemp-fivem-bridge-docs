@@ -1,0 +1,38 @@
+---
+title: Introduction
+---
+
+## What This Project Does
+
+`ragemp-fivem-bridge` lets you run a JavaScript RAGE:MP gamemode on FiveM with minimal rewrites.
+
+Your scripts keep using the familiar `mp.*` API. The bridge maps that API to FiveM natives, net events, state bags, and NUI callbacks.
+
+## Who This Documentation Is For
+
+- Developers porting an existing RAGE:MP JavaScript gamemode.
+- Teams building new gameplay with RAGE:MP-style APIs on top of FiveM.
+
+## Start Here
+
+1. Read [Getting Started](/docs/getting-started) to choose your mode.
+2. Follow either standalone.
+3. Read [Server](/docs/server) and [Client](/docs/client) sections.
+4. If you use UI, read [NUI / CEF](/docs/nui-cef).
+5. Before production, read [Configuration](/docs/configuration) and [Troubleshooting](/docs/troubleshooting).
+
+## Core Concepts
+
+- `mp` is installed globally by the bridge at runtime.
+- The bridge is split into server, client, and CEF runtimes.
+- Standalone resource (`@ragemp-fivem-bridge/server.js`, `@ragemp-fivem-bridge/client.js`)
+
+## Important Production Notes
+
+<Callout type="warning" title="mp.game.wait() blocks the client in render on FiveM." />
+
+<Callout type="warning" title="Treat client-side events and arguments as untrusted input." />
+
+<Callout type="warning" title="Remote `eval` and raw native `invoke` are disabled by default. Enable them only if you fully understand the risk." />
+
+<Callout type="warning" title="If you use `mp.gui.takeScreenshot`, you must run the `screenshot-basic` resource." />

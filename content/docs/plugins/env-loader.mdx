@@ -1,0 +1,93 @@
+---
+title: env-loader
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { Accordions, Accordion } from 'fumadocs-ui/components/accordion';
+import { Server, Code, Power } from 'lucide-react';
+
+# env-loader
+
+`env-loader` is a server-side plugin that loads each resource's `.env` file at startup and exposes `mp.environment.loadEnv()`.
+
+<Callout type="warn" title="Keep secrets private">
+  Never commit license keys, database URLs, tokens, or passwords. Keep `.env` files out of git and avoid exposing them to client or NUI code.
+</Callout>
+
+<Cards>
+  <Card title="Side" icon={<Server />}>Server only</Card>
+  <Card title="API" icon={<Code />}>`mp.environment.loadEnv()`</Card>
+  <Card title="Disable name" icon={<Power />}>`env-loader`</Card>
+</Cards>
+
+## Add a `.env` file
+
+<Steps>
+  <Step>
+    Create a `.env` file in your resource folder.
+  </Step>
+  <Step>
+    Put secrets and environment-specific config inside it.
+  </Step>
+  <Step>
+    Read values from `process.env` after the bridge starts.
+  </Step>
+</Steps>
+
+```txt title="your-gamemode/.env"
+DATABASE_URL=mysql://user:password@localhost:3306/gamemode
+JWT_SECRET=change-me
+ECONOMY_DEBUG=false
+```
+
+```js title="server/index.js"
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL is missing');
+}
+```
+
+## Manual reload
+
+Use `mp.environment.loadEnv()` when you need to explicitly load environment variables from code.
+
+```js title="server/config.js"
+mp.environment.loadEnv();
+
+export const config = {
+  databaseUrl: process.env.DATABASE_URL,
+  debugEconomy: process.env.ECONOMY_DEBUG === 'true',
+};
+```
+
+## Disable it
+
+<Tabs items={["Gamemode", "Bridge"]}>
+<Tab value="Gamemode">
+
+```lua title="your-gamemode/fxmanifest.lua"
+disable_plugin 'env-loader'
+```
+
+</Tab>
+<Tab value="Bridge">
+
+```lua title="ragemp-fivem-bridge/fxmanifest.lua"
+disable_plugin 'env-loader'
+```
+
+</Tab>
+</Tabs>
+
+<Accordions>
+  <Accordion title="Should `.env` be listed in `files {}`?">
+    No. Keep `.env` server-side and private. Do not serve it to clients or NUI.
+  </Accordion>
+  <Accordion title="Can I use it for client settings?">
+    Use it for server configuration. For client-visible settings, send only safe public values through your own server-to-client event or RPC.
+  </Accordion>
+</Accordions>

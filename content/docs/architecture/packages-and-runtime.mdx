@@ -1,0 +1,30 @@
+---
+title: Packages and Runtime Boundaries
+description: Understand the monorepo packages and what each one is responsible for.
+---
+
+## Core Packages
+
+- `@ragemp-fivem-bridge/server`: server `mp` implementation.
+- `@ragemp-fivem-bridge/client`: client `mp` implementation.
+- `@ragemp-fivem-bridge/cef`: CEF runtime (`_bridge.js`).
+- `@ragemp-fivem-bridge/rage-rpc`: cross-context RPC layer.
+- `@ragemp-fivem-bridge/plugin-manager`: builtin/external plugin loading.
+- `@ragemp-fivem-bridge/shared`: base `Entity`, `Pool`, `Vector3`, event emitter, storage helpers.
+- `@ragemp-fivem-bridge/cli`: `mp-fivem` commands.
+
+## `mp` Initialization Guard
+
+Server and client entries only initialize when resource metadata `ragemp_bridge` is not `library`.
+
+This prevents the standalone bridge resource from self-running its own gameplay runtime and ensures it runs inside the consuming resource context.
+
+## Plugin Load Lifecycle
+
+At startup:
+
+1. Built-ins are registered.
+2. Disabled plugin list is read from metadata (`disable_plugin`).
+3. Built-ins are loaded.
+4. Started resources are scanned for external plugins (`bridge_plugin 'yes'`).
+5. Future resource starts are watched for plugins.

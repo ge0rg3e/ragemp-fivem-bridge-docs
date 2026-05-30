@@ -1,0 +1,23 @@
+---
+title: Architecture Overview
+description: How mp.* is built and routed across server, client, and CEF contexts.
+---
+
+## High-Level Flow
+
+1. Bridge initializes `globalThis.mp`.
+2. Your gamemode code attaches handlers and uses pools/entities.
+3. Bridge translates actions into FiveM primitives (`emitNet`, natives, NUI callbacks).
+4. Built-in plugins extend behavior (`rage-rpc`, `spawnmanager`, `vehicle-sync`, and more).
+
+## Runtime Contexts
+
+- **Server runtime**: entities, pools, world state, command parsing, RPC server, plugin loading.
+- **Client runtime**: local player state tracking, input/key handling, browser pool, game native wrappers.
+- **CEF runtime**: `mp.events`, `mp.trigger`, `mp.rpc` for browser pages.
+
+## Why This Matters
+
+When debugging, always identify context first.
+
+A method existing in server types does not mean it exists in CEF types.

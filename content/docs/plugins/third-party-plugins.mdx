@@ -1,0 +1,115 @@
+---
+title: Third-party plugins
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Accordions, Accordion } from 'fumadocs-ui/components/accordion';
+import { Package, Plug, Power } from 'lucide-react';
+
+# Third-party plugins
+
+A third-party plugin is a normal FiveM resource that declares bridge metadata in `fxmanifest.lua`.
+
+<Cards>
+  <Card title="Resource based" icon={<Package />}>Ship plugins as FiveM resources</Card>
+  <Card title="Bridge context" icon={<Plug />}>Plugin code receives `mp` and `plugin`</Card>
+  <Card title="Disable support" icon={<Power />}>Matched by `bridge_plugin_name`</Card>
+</Cards>
+
+## fxmanifest metadata
+
+```lua title="my-plugin/fxmanifest.lua"
+fx_version 'cerulean'
+game 'gta5'
+
+bridge_plugin 'yes'
+bridge_plugin_name 'my-plugin'
+bridge_server_script 'dist/server.js'
+bridge_client_script 'dist/client.js'
+```
+
+<Callout type="info" title="Both sides are optional by design">
+  Provide the server script, client script, or both depending on what your plugin does. The bridge reads the correct metadata key for the current side.
+</Callout>
+
+## Write plugin code
+
+<Tabs items={["Server plugin", "Client plugin", "Namespaced events"]}>
+<Tab value="Server plugin">
+
+```js title="dist/server.js"
+mp.events.add('playerJoin', (player) => {
+  plugin.log('joined:', player.name);
+});
+```
+
+</Tab>
+<Tab value="Client plugin">
+
+```js title="dist/client.js"
+mp.events.add('render', () => {
+  // draw helpers, telemetry, compatibility hooks, etc.
+});
+```
+
+</Tab>
+<Tab value="Namespaced events">
+
+```js title="dist/server.js"
+const eventName = plugin.namespace('ready');
+
+mp.events.add(eventName, (player) => {
+  plugin.log('ready from', player.name);
+});
+```
+
+</Tab>
+</Tabs>
+
+## Plugin helper
+
+| Helper | Description |
+| --- | --- |
+| `plugin.name` | The resolved plugin name. |
+| `plugin.resource` | The FiveM resource that provided the plugin. |
+| `plugin.builtin` | `true` for built-ins, `false` for external plugins. |
+| `plugin.namespace(event)` | Returns a namespaced event like `my-plugin:ready`. |
+| `plugin.log(...args)` | Logs with a `[plugin:name]` prefix. |
+
+## Load flow
+
+<Steps>
+  <Step>
+    The bridge scans started resources.
+  </Step>
+  <Step>
+    Resources with `bridge_plugin 'yes'` are considered plugins.
+  </Step>
+  <Step>
+    The bridge reads `bridge_server_script` or `bridge_client_script` for the current side.
+  </Step>
+  <Step>
+    The plugin script runs with `mp` and `plugin` available in scope.
+  </Step>
+</Steps>
+
+## Disable your plugin
+
+```lua title="consumer/fxmanifest.lua"
+disable_plugin 'my-plugin'
+```
+
+<Accordions>
+  <Accordion title="How is the plugin name chosen?">
+    The bridge uses `bridge_plugin_name`. If that metadata is missing, it falls back to the resource name.
+  </Accordion>
+  <Accordion title="Can plugin code import npm packages?">
+    Bundle plugin code into the script path you declare. The bridge loads the built file from the resource.
+  </Accordion>
+  <Accordion title="Can two plugins use the same name?">
+    Avoid duplicate names. The plugin manager only keeps one active plugin for a given name.
+  </Accordion>
+</Accordions>

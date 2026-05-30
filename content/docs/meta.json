@@ -1,0 +1,13 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "getting-started",
+    "architecture",
+    "server",
+    "nui-cef",
+    "plugins",
+    "rpc",
+    "troubleshooting"
+  ]
+}

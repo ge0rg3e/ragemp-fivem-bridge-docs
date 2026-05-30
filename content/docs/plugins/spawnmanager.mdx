@@ -1,0 +1,86 @@
+---
+title: spawnmanager
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Accordions, Accordion } from 'fumadocs-ui/components/accordion';
+import { Route, Code, Layers, Power } from 'lucide-react';
+
+# spawnmanager
+
+`spawnmanager` provides RAGE:MP-style player spawning for bridge resources.
+
+<Cards>
+  <Card title="Side" icon={<Route />}>Server and client</Card>
+  <Card title="Main API" icon={<Code />}>`player.spawn(pos)`</Card>
+  <Card title="Collision" icon={<Layers />}>Loads collision before spawn</Card>
+  <Card title="Disable name" icon={<Power />}>`spawnmanager`</Card>
+</Cards>
+
+<Callout type="info" title="Designed for migration">
+  Use this plugin when porting gamemodes that already call `player.spawn(position)` in RAGE:MP-style server code.
+</Callout>
+
+## Spawn a player
+
+<Tabs items={["Basic", "With heading", "On join"]}>
+<Tab value="Basic">
+
+```js title="server/spawn.js"
+player.spawn(new mp.Vector3(-1037.6, -2737.8, 20.2));
+```
+
+</Tab>
+<Tab value="With heading">
+
+```js title="server/spawn.js"
+const airport = new mp.Vector3(-1037.6, -2737.8, 20.2);
+
+player.spawn(airport);
+player.heading = 330;
+```
+
+</Tab>
+<Tab value="On join">
+
+```js title="server/index.js"
+mp.events.add('playerJoin', (player) => {
+  player.spawn(new mp.Vector3(-1037.6, -2737.8, 20.2));
+  player.outputChatBox('Welcome to the server!');
+});
+```
+
+</Tab>
+</Tabs>
+
+## Recommended spawn flow
+
+<Steps>
+  <Step>
+    Pick a safe spawn position on the server.
+  </Step>
+  <Step>
+    Call `player.spawn(pos)`.
+  </Step>
+  <Step>
+    Apply post-spawn state such as dimension, clothes, weapons, or UI.
+  </Step>
+</Steps>
+
+## Disable it
+
+```lua title="fxmanifest.lua"
+disable_plugin 'spawnmanager'
+```
+
+<Accordions>
+  <Accordion title="When should I disable spawnmanager?">
+    Disable it if your framework owns the complete spawn pipeline and you do not want the bridge to install spawn helpers.
+  </Accordion>
+  <Accordion title="Does this replace my character selector?">
+    No. Keep your character selector and call `player.spawn(pos)` after the player chooses a character.
+  </Accordion>
+</Accordions>

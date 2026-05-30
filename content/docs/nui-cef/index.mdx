@@ -1,0 +1,17 @@
+---
+title: NUI / CEF Runtime
+description: Understand the browser runtime model used to emulate RAGE:MP CEF in FiveM.
+---
+
+## Why This Layer Exists
+
+RAGE:MP supports multiple independent CEF browsers. FiveM gives each resource one NUI root page.
+
+The bridge solves this by running a host manager and spawning one iframe per `mp.browsers.new(...)` call.
+
+## Two Roles
+
+- **Manager (host)**: top-level NUI page, receives and routes messages.
+- **View (iframe)**: actual browser page loaded per bridge browser entity.
+
+The role is auto-detected at runtime.

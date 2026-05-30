@@ -1,0 +1,42 @@
+---
+title: Events and Commands
+description: Built-in server events, custom remote events, and command/proc patterns.
+---
+
+## Built-In Patterns
+
+```js
+mp.events.add("playerJoin", (player) => {
+  player.outputChatBox("Welcome");
+});
+
+mp.events.addCommand("veh", (player, raw, model) => {
+  // raw = command args string, remaining params are split args
+});
+
+mp.events.addProc("getMoney", async (player) => {
+  return 100;
+});
+```
+
+## Command Parsing Behavior
+
+- Incoming command text comes from client/NUI.
+- Leading `/` is stripped.
+- Command name is first token.
+- Handler signature is `(player, rawArgs, ...splitArgs)`.
+
+## Custom Remote Events
+
+When you bind a non-framework event with `mp.events.add("myEvent", ...)`, server attaches an `onNet` listener lazily.
+
+<Callout type="warning" title="Client-originated event arguments are untrusted. Validate before mutating state." />
+
+## Chat Message Handling
+
+Default bridge server logic:
+
+- Trims message to 256 chars.
+- Sanitizes `<` and `>` before broadcast.
+- Calls `playerChat` handlers first.
+- If any handler returns `false`, broadcast is cancelled.

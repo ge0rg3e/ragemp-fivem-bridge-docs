@@ -1,0 +1,41 @@
+---
+title: Browser API and Procs
+description: Use BrowserMp methods, event calls, and async proc calls between client and browser.
+---
+
+## Creating and Using Browsers
+
+```js
+const browser = mp.browsers.new("index.html");
+
+browser.call("setData", { online: true });
+browser.execute("document.title = 'HUD'");
+
+const result = await browser.callProc("collectForm");
+
+browser.destroy();
+```
+
+## In Browser Page
+
+```js
+mp.events.add("setData", (state) => {
+  console.log(state);
+});
+
+mp.events.addProc("collectForm", () => {
+  return { ok: true };
+});
+
+mp.trigger("ui:clicked", "save");
+```
+
+## Proc Timeouts
+
+Browser proc calls use timeout-based pending maps on both client and CEF sides.
+
+Design handlers to return quickly or use RPC directly for long server work.
+
+## Chat Browser Integration
+
+A browser can be marked as chat with `markAsChat()`, letting `mp.gui.chat` mirror messages into that UI.

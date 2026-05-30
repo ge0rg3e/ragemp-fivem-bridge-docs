@@ -1,0 +1,95 @@
+---
+title: vehicle-sync
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Accordions, Accordion } from 'fumadocs-ui/components/accordion';
+import { Route, ShieldCheck, Wand, Power } from 'lucide-react';
+
+# vehicle-sync
+
+`vehicle-sync` keeps cosmetic vehicle state consistent for late joiners and players who stream a vehicle in later.
+
+<Cards>
+  <Card title="Side" icon={<Route />}>Server and client</Card>
+  <Card title="State owner" icon={<ShieldCheck />}>Server-authoritative</Card>
+  <Card title="Manual setup" icon={<Wand />}>No API calls required</Card>
+  <Card title="Disable name" icon={<Power />}>`vehicle-sync`</Card>
+</Cards>
+
+<Callout type="info" title="Why it exists">
+  Many cosmetic vehicle changes are applied per client. Without replaying state, a player who streams the vehicle later may see default colours, neon, mods, livery, extras, or window tint.
+</Callout>
+
+## Use vehicle setters normally
+
+<Tabs items={["Colour and neon", "Mods", "Late streamer"]}>
+<Tab value="Colour and neon">
+
+```js title="server/vehicles.js"
+const veh = mp.vehicles.new('adder', new mp.Vector3(-45.4, -1097.1, 26.4));
+
+veh.setColorRGB(0, 200, 255, 10, 10, 10);
+veh.setNeonColor(0, 150, 255);
+veh.neonEnabled = true;
+```
+
+</Tab>
+<Tab value="Mods">
+
+```js title="server/vehicles.js"
+veh.setMod(11, 3); // engine
+veh.setMod(12, 2); // brakes
+veh.setMod(18, 0); // turbo
+veh.livery = 1;
+```
+
+</Tab>
+<Tab value="Late streamer">
+
+```js title="what-happens.js"
+// 1. Server stores the authoritative cosmetic state on the VehicleMp entity.
+// 2. A client streams the vehicle in later.
+// 3. The client requests a snapshot.
+// 4. The plugin repaints the vehicle to match server state.
+```
+
+</Tab>
+</Tabs>
+
+## What it syncs
+
+Common replicated cosmetic state includes vehicle colour, neon, mods, livery, window tint, extras, and similar appearance values.
+
+<Steps>
+  <Step>
+    Create the vehicle on the server.
+  </Step>
+  <Step>
+    Set cosmetic properties through normal `VehicleMp` APIs.
+  </Step>
+  <Step>
+    Let `vehicle-sync` replay snapshots as clients stream vehicles in.
+  </Step>
+</Steps>
+
+## Disable it
+
+```lua title="fxmanifest.lua"
+disable_plugin 'vehicle-sync'
+```
+
+<Accordions>
+  <Accordion title="Do I need to call a sync method?">
+    No. Set vehicle properties normally. The plugin keeps and replays the state for you.
+  </Accordion>
+  <Accordion title="When should I disable vehicle-sync?">
+    Disable it if your own vehicle system already manages server-authoritative appearance snapshots.
+  </Accordion>
+  <Accordion title="Does it make all vehicle physics authoritative?">
+    No. This page focuses on cosmetic vehicle state, not a full physics authority system.
+  </Accordion>
+</Accordions>

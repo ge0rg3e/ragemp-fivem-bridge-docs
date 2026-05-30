@@ -1,0 +1,43 @@
+---
+title: Setup and Host Model
+description: Reliable setup for host pages, browser pages, and bridge script loading.
+---
+
+## Recommended Setup
+
+`fxmanifest.lua`:
+
+```lua
+ui_page 'ui/host.html'
+files {
+  'ui/host.html',
+  'ui/index.html',
+  'ui/index.js',
+  'ui/index.css'
+}
+```
+
+`ui/host.html`:
+
+```html
+<script src="https://cfx-nui-ragemp-fivem-bridge/ui/_bridge.js"></script>
+```
+
+## Browser URL Formats
+
+`mp.browsers.new` accepts:
+
+- Relative URL: `"index.html"`
+- Cross-resource shorthand: `"@my-resource/ui/login.html"`
+- Absolute URL: `"https://cfx-nui-my-resource/ui/login.html"`
+- `data:text/html,...` payloads
+
+## Cross-Resource Warning
+
+Bridge attempts runtime script injection into iframes, but cross-origin resource pages can block that.
+
+<Callout type="warning" title="For reliability, include `_bridge.js` explicitly in every browser page that uses `mp.*`." />
+
+## Input Forwarding
+
+Host forwards keyboard state (`keydown`/`keyup`) to client through NUI callbacks for key manager consistency.

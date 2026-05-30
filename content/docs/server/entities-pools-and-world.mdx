@@ -1,0 +1,322 @@
+---
+title: Entities, Pools, and World
+description: Working with players, vehicles, world state, synced variables, dimensions, and security-sensitive methods.
+---
+
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { File, Files, Folder } from 'fumadocs-ui/components/files';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Database, CloudSun, ShieldAlert, Layers, Pencil, Search, ListPlus, Braces } from 'lucide-react';
+
+# Entities, Pools, and World
+
+Use this page when you are working with RAGE-compatible entities, entity pools, synced entity data, global world state, routing buckets, or security-sensitive player methods.
+
+<Callout type="info" title="Bridge behavior">
+The bridge maps RAGE-style server APIs onto FiveM primitives where possible. Some APIs, like dimensions and entity variables, are backed by FiveM routing buckets and state bags.
+</Callout>
+
+<Cards>
+  <Card title="Entity variables" icon={<Database />}>
+    Sync custom state on players, vehicles, and other entities using helpers or the `data` proxy.
+  </Card>
+
+  <Card title="World state" icon={<CloudSun />}>
+    Control weather, time, IPLs, and traffic-light state through `mp.world`.
+  </Card>
+
+  <Card title="Security-sensitive calls" icon={<ShieldAlert />}>
+    Remote eval and native invoke are blocked by default unless explicitly enabled with convars.
+  </Card>
+
+  <Card title="Dimensions" icon={<Layers />}>
+    Dimensions map to FiveM routing buckets. Use them carefully to avoid unnecessary memory overhead.
+  </Card>
+</Cards>
+
+## Vehicle orphan mode
+
+`mp.vehicles` supports getting and setting an entity orphan mode with `.orphanMode`.
+
+The orphan mode controls what the server should do with an entity when ownership or relevancy changes.
+
+<Tabs items={['Usage', 'Mode IDs']}>
+  <Tab value="Usage">
+
+```ts title="Set vehicle orphan mode"
+const vehicle = mp.vehicles.new(
+  mp.joaat('adder'),
+  new mp.Vector3(0, 0, 72),
+  {
+    heading: 0,
+    dimension: 0,
+  },
+);
+
+vehicle.orphanMode = EntityOrphanMode.KeepEntity;
+
+console.log(vehicle.orphanMode);
+```
+
+  </Tab>
+
+  <Tab value="Mode IDs">
+
+```ts title="EntityOrphanMode"
+enum EntityOrphanMode {
+  // Default, this will delete the entity when it isn't relevant to any players
+  // NOTE: this doesn't mean when they're no longer in scope
+  DeleteWhenNotRelevant = 0,
+
+  // The entity will be deleted whenever its original owner disconnects
+  // NOTE: if this is set when the entity's original owner has already left it,
+  // it will be marked for deletion, similar to calling DELETE_ENTITY
+  DeleteOnOwnerDisconnect = 1,
+
+  // The entity will never be deleted by the server when it does relevancy checks.
+  // You should only use this on entities that need to be relatively persistent.
+  KeepEntity = 2,
+}
+```
+
+  </Tab>
+</Tabs>
+
+<Callout type="warn" title="Use persistent entities intentionally">
+`KeepEntity` is useful for vehicles or world objects that should survive relevancy checks, but it also means your script is responsible for cleanup.
+</Callout>
+
+## Entity variables
+
+Every entity supports variable helpers for synced data.
+
+<Cards>
+  <Card title="setVariable" icon={<Pencil />}>
+    Set one synced key on an entity.
+  </Card>
+
+  <Card title="getVariable" icon={<Search />}>
+    Read one synced key from an entity.
+  </Card>
+
+  <Card title="setVariables" icon={<ListPlus />}>
+    Apply multiple synced keys from an object.
+  </Card>
+
+  <Card title="data proxy" icon={<Braces />}>
+    Use `entity.data.someKey = value` as a convenient proxy.
+  </Card>
+</Cards>
+
+<Tabs items={['Helpers', 'Data proxy', 'Events']}>
+  <Tab value="Helpers">
+
+```ts title="Entity variable helpers"
+player.setVariable('isReady', true);
+player.setVariable('job', 'mechanic');
+
+const isReady = player.getVariable<boolean>('isReady');
+
+vehicle.setVariables({
+  fuel: 87,
+  locked: false,
+  ownerId: player.id,
+});
+```
+
+  </Tab>
+
+  <Tab value="Data proxy">
+
+```ts title="entity.data proxy"
+player.data.isReady = true;
+player.data.job = 'mechanic';
+
+vehicle.data.fuel = 87;
+vehicle.data.locked = false;
+
+console.log(player.data.job);
+console.log(vehicle.data.fuel);
+```
+
+  </Tab>
+
+  <Tab value="Events">
+
+```ts title="React to synced data changes"
+mp.events.add('entityDataChange', (entity, key, newValue, oldValue) => {
+  console.log(`${entity.id} changed ${key}`, {
+    oldValue,
+    newValue,
+  });
+});
+```
+
+  </Tab>
+</Tabs>
+
+State bag updates are observed and reflected into `entityDataChange`.
+
+<Callout type="info" title="State bags under the hood">
+Entity variables are synchronized through FiveM state bags. Treat them as networked state, not as a replacement for local-only runtime variables.
+</Callout>
+
+## World API
+
+`mp.world` exposes global world-state helpers.
+
+<Accordions>
+  <Accordion title="Weather">
+    Use `mp.world.weather` to read or update the current weather value.
+
+```ts title="Weather"
+mp.world.weather = 'CLEAR';
+
+console.log(mp.world.weather);
+```
+
+  </Accordion>
+
+  <Accordion title="Time">
+    `mp.world.time` exposes `hour`, `minute`, `second`, and `set`.
+
+```ts title="Time"
+mp.world.time.hour = 12;
+mp.world.time.minute = 30;
+mp.world.time.second = 0;
+
+mp.world.time.set(18, 0, 0);
+```
+
+  </Accordion>
+
+  <Accordion title="Traffic lights">
+    `mp.world.trafficLights` exposes `locked` and `state`.
+
+```ts title="Traffic lights"
+mp.world.trafficLights.locked = true;
+mp.world.trafficLights.state = 2;
+```
+
+  </Accordion>
+
+  <Accordion title="IPLs">
+    Load or unload IPLs with `requestIpl(name)` and `removeIpl(name)`.
+
+```ts title="IPLs"
+mp.world.requestIpl('apa_v_mp_h_01_a');
+
+mp.world.removeIpl('apa_v_mp_h_01_a');
+```
+
+  </Accordion>
+
+  <Accordion title="Weather transitions">
+    Use `setWeatherTransition(from, to)` to move between weather states.
+
+```ts title="Weather transition"
+mp.world.setWeatherTransition('CLEAR', 'RAIN');
+```
+
+  </Accordion>
+</Accordions>
+
+When a player becomes ready, the server pushes the current weather and time so the client starts with the correct world state.
+
+## Security-sensitive methods
+
+`player.eval(code)` and `player.invoke(hash, ...)` send remote execution requests to the client.
+
+<Callout type="danger" title="Disabled by default">
+Clients block remote eval and remote invoke unless the matching convars are enabled. Keep both disabled unless your project has a specific, audited reason to enable them.
+</Callout>
+
+<Tabs items={['Blocked by default', 'Enable explicitly', 'Usage shape']}>
+  <Tab value="Blocked by default">
+
+By default, remote eval and remote invoke requests are rejected by the client.
+
+This is the safest mode and should be used for production servers unless you fully control the call sites and client scripts.
+
+  </Tab>
+
+  <Tab value="Enable explicitly">
+
+```txt title="server.cfg"
+setr ragemp_allow_remote_eval 1
+setr ragemp_allow_remote_invoke 1
+```
+
+  </Tab>
+
+  <Tab value="Usage shape">
+
+```ts title="Security-sensitive examples"
+// Sends code to the client for execution.
+player.eval('mp.gui.chat.push("Hello from server")');
+
+// Sends a native invocation request to the client.
+player.invoke('0xD80958FC74E988A6', player.handle);
+```
+
+  </Tab>
+</Tabs>
+
+## Dimension reminder
+
+Dimensions map to FiveM routing buckets.
+
+<Callout type="warn" title="Avoid excessive bucket usage">
+Routing buckets are powerful, but excessive bucket usage can increase memory overhead. Prefer reusing dimensions for logical groups instead of creating many short-lived buckets.
+</Callout>
+
+```ts title="Set an entity dimension"
+player.dimension = 10;
+vehicle.dimension = 10;
+
+console.log(player.dimension);
+```
+
+## Recommended workflow
+
+<Steps>
+  <Step>
+    Use entity variables for state that must be synced to clients.
+  </Step>
+
+  <Step>
+    Use local script variables for server-only runtime state.
+  </Step>
+
+  <Step>
+    Use `mp.world` for global world state such as weather, time, IPLs, and traffic lights.
+  </Step>
+
+  <Step>
+    Keep remote eval and remote invoke disabled unless required and reviewed.
+  </Step>
+
+  <Step>
+    Use dimensions intentionally because each dimension maps to a FiveM routing bucket.
+  </Step>
+</Steps>
+
+## Quick reference
+
+| Area | API | Notes |
+| --- | --- | --- |
+| Vehicle orphan mode | `vehicle.orphanMode` | Controls cleanup behavior when relevancy or ownership changes |
+| Single entity variable | `entity.setVariable(key, value)` | Sets one synced key |
+| Read entity variable | `entity.getVariable(key)` | Reads one synced key |
+| Multiple variables | `entity.setVariables(object)` | Applies multiple synced keys |
+| Data proxy | `entity.data.key = value` | Convenient synced data syntax |
+| Weather | `mp.world.weather` | Reads or updates current weather |
+| Time | `mp.world.time` | Supports `hour`, `minute`, `second`, and `set` |
+| Traffic lights | `mp.world.trafficLights` | Supports `locked` and `state` |
+| IPLs | `requestIpl`, `removeIpl` | Loads or unloads IPLs |
+| Remote eval | `player.eval(code)` | Requires `ragemp_allow_remote_eval 1` |
+| Remote invoke | `player.invoke(hash, ...)` | Requires `ragemp_allow_remote_invoke 1` |
+| Dimensions | `entity.dimension` | Maps to FiveM routing buckets |

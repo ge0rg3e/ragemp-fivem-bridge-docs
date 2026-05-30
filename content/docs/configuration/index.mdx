@@ -1,0 +1,24 @@
+---
+title: Configuration Overview
+description: fxmanifest, server.cfg, bridge.config.json, and security-related convars.
+---
+
+## Required Ordering Rules
+
+- Bridge scripts first in `server_scripts` and `client_scripts` (standalone).
+- `ensure ragemp-fivem-bridge` before gamemode in `server.cfg` (standalone).
+- Every UI file must be listed in `files {}`.
+
+## Recommended Baseline
+
+```ini
+ensure ragemp-fivem-bridge
+ensure ragemp-chat
+ensure your-gamemode
+```
+
+If you use screenshots:
+
+```ini
+ensure screenshot-basic
+```

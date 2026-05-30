@@ -1,0 +1,70 @@
+---
+title: fs-compat
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { Accordions, Accordion } from 'fumadocs-ui/components/accordion';
+import { Server, Zap, Power } from 'lucide-react';
+
+# fs-compat
+
+`fs-compat` is a server-side compatibility plugin that makes file system code behave more like it did in RAGE:MP.
+
+<Callout type="info" title="What it fixes">
+  FiveM resources do not always run with the working directory your old SDK code expects. `fs-compat` redirects `process.cwd()` to the resource path so common file writes, logs, and relative paths keep working.
+</Callout>
+
+<Cards>
+  <Card title="Side" icon={<Server />}>Server only</Card>
+  <Card title="Loads automatically" icon={<Zap />}>Enabled by default</Card>
+  <Card title="Disable name" icon={<Power />}>`fs-compat`</Card>
+</Cards>
+
+## Typical use case
+
+You have existing code that writes logs, JSON files, temporary state, or generated files using paths based on `process.cwd()`.
+
+```js title="server/index.js"
+import fs from 'node:fs';
+import path from 'node:path';
+
+const logsPath = path.join(process.cwd(), 'logs', 'server.log');
+fs.mkdirSync(path.dirname(logsPath), { recursive: true });
+fs.appendFileSync(logsPath, 'Bridge started\n');
+```
+
+## Disable it
+
+<Tabs items={["Gamemode", "Bridge"]}>
+<Tab value="Gamemode">
+
+```lua title="your-gamemode/fxmanifest.lua"
+disable_plugin 'fs-compat'
+```
+
+</Tab>
+<Tab value="Bridge">
+
+```lua title="ragemp-fivem-bridge/fxmanifest.lua"
+disable_plugin 'fs-compat'
+```
+
+</Tab>
+</Tabs>
+
+## Checklist
+
+- Use it when old RAGE:MP server code depends on `process.cwd()`.
+- Disable it if your code already resolves every path through FiveM resource APIs.
+- Keep sensitive files out of public resources even when file writes work.
+
+<Accordions>
+  <Accordion title="Does this load on the client?">
+    No. `fs-compat` is server-side only.
+  </Accordion>
+  <Accordion title="Does it replace Node's fs module?">
+    No. It targets compatibility around the current working directory, not the entire `fs` API.
+  </Accordion>
+</Accordions>

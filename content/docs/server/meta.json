@@ -1,0 +1,8 @@
+{
+  "title": "Server",
+  "pages": [
+    "index",
+    "events-and-commands",
+    "entities-pools-and-world"
+  ]
+}

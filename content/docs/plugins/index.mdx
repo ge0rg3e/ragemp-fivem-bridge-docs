@@ -1,0 +1,109 @@
+---
+title: Plugins
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Accordions, Accordion } from 'fumadocs-ui/components/accordion';
+import { FolderSync, FileKey, RadioTower, MapPin, Car, PackagePlus } from 'lucide-react';
+
+# Plugins
+
+The bridge ships with built-in plugins that install compatibility features automatically when `ragemp-fivem-bridge` starts.
+
+<Callout type="info" title="Automatic by default">
+  You do not need to import these plugins manually. They load during bridge initialization unless you disable them with `disable_plugin`.
+</Callout>
+
+<Cards>
+  <Card title="fs-compat" href="/plugins/fs-compat" icon={<FolderSync />}>
+    Makes file system behavior feel closer to RAGE:MP by redirecting `process.cwd()` to the active resource path.
+  </Card>
+  <Card title="env-loader" href="/plugins/env-loader" icon={<FileKey />}>
+    Loads a resource-level `.env` file and exposes `mp.environment.loadEnv()`.
+  </Card>
+  <Card title="rage-rpc" href="/plugins/rage-rpc" icon={<RadioTower />}>
+    Installs `mp.rpc`, a drop-in RPC layer based on the leonardssh/rage-rpc API.
+  </Card>
+  <Card title="spawnmanager" href="/plugins/spawnmanager" icon={<MapPin />}>
+    Handles player spawning with collision loading and ground-Z support.
+  </Card>
+  <Card title="vehicle-sync" href="/plugins/vehicle-sync" icon={<Car />}>
+    Keeps cosmetic vehicle state authoritative and replays it to late-streaming clients.
+  </Card>
+  <Card title="Third-party plugins" href="/plugins/third-party-plugins" icon={<PackagePlus />}>
+    Learn how to ship your own plugin as a FiveM resource with bridge metadata.
+  </Card>
+</Cards>
+
+## Disable a plugin
+
+Use `disable_plugin` in either your gamemode resource or the bridge resource.
+
+<Tabs items={["Per gamemode", "Global"]}>
+<Tab value="Per gamemode">
+
+```lua title="your-gamemode/fxmanifest.lua"
+fx_version 'cerulean'
+game 'gta5'
+
+server_scripts {
+  '@ragemp-fivem-bridge/server.js',
+  'server/index.js',
+}
+
+client_scripts {
+  '@ragemp-fivem-bridge/client.js',
+  'client/index.js',
+}
+
+disable_plugin 'rage-rpc'
+disable_plugin 'vehicle-sync'
+```
+
+</Tab>
+<Tab value="Global">
+
+```lua title="ragemp-fivem-bridge/fxmanifest.lua"
+fx_version 'cerulean'
+game 'gta5'
+ragemp_bridge 'library'
+
+disable_plugin 'spawnmanager'
+```
+
+</Tab>
+</Tabs>
+
+<Steps>
+  <Step>
+    Add one `disable_plugin` line for each plugin name.
+  </Step>
+  <Step>
+    Restart the bridge and the consuming resource.
+  </Step>
+  <Step>
+    Check the console for a log similar to `[bridge:plugins] disabled: rage-rpc`.
+  </Step>
+</Steps>
+
+## Plugin names
+
+| Plugin | Side | Disable name |
+| --- | --- | --- |
+| fs-compat | server | `fs-compat` |
+| env-loader | server | `env-loader` |
+| rage-rpc | both | `rage-rpc` |
+| spawnmanager | both | `spawnmanager` |
+| vehicle-sync | both | `vehicle-sync` |
+
+<Accordions>
+  <Accordion title="When should I disable a built-in plugin?">
+    Disable one when your resource ships its own replacement. For example, disable `rage-rpc` if you already have a custom RPC layer, or disable `spawnmanager` if your gamemode owns the full spawn flow.
+  </Accordion>
+  <Accordion title="Can the same system disable third-party plugins?">
+    Yes. Third-party plugins are matched against their `bridge_plugin_name` metadata, so the same `disable_plugin 'name'` syntax works.
+  </Accordion>
+</Accordions>

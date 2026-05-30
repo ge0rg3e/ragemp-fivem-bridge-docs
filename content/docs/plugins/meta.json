@@ -1,0 +1,12 @@
+{
+  "title": "Plugins",
+  "pages": [
+    "index",
+    "fs-compat",
+    "env-loader",
+    "rage-rpc",
+    "spawnmanager",
+    "vehicle-sync",
+    "third-party-plugins"
+  ]
+}
