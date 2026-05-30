@@ -11,7 +11,7 @@ import {
 import { getPageMarkdownUrl, source } from '@/lib/source';
 import browserCollections from 'collections/browser';
 import { baseOptions } from '@/lib/layout.shared';
-import { gitConfig } from '@/lib/shared';
+import { appName, gitConfig } from '@/lib/shared';
 import { useFumadocsLoader } from 'fumadocs-core/source/client';
 import { getPageImagePath } from '@/lib/og';
 import { useMDXComponents } from '@/components/mdx';
@@ -45,7 +45,7 @@ const clientLoader = browserCollections.docs.createClientLoader({
   ) {
     return (
       <DocsPage toc={toc}>
-        <title>{frontmatter.title}</title>
+        <title>{`${frontmatter.title} | ${appName}`}</title>
         <meta name="description" content={frontmatter.description} />
         <meta property="og:image" content={imagePath} />
         <DocsTitle>{frontmatter.title}</DocsTitle>
