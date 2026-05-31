@@ -5,7 +5,7 @@ description: Use BrowserMp methods, event calls, and async proc calls between cl
 
 ## Creating and Using Browsers
 
-```js
+```js title="Client-side"
 const browser = mp.browsers.new("index.html");
 
 browser.call("setData", { online: true });
@@ -16,9 +16,86 @@ const result = await browser.callProc("collectForm");
 browser.destroy();
 ```
 
+## Browser Lifecycle and Error Events
+
+Client-side browser events are subscribed with `mp.events.add(...)`.
+
+### `browserCreated`
+
+Fired when a browser instance is created.
+
+Arguments: `(browser)`
+
+Note: this confirms instantiation only; the page may still be loading.
+
+### `browserDomReady`
+
+Fired when the iframe page is loaded and bridge handshake is confirmed.
+
+Arguments: `(browser)`
+
+Use this event as the safe point to call `browser.call(...)`.
+
+### `browserLoadError`
+
+Fired when the page fails to load or does not signal ready within 5 seconds.
+
+Arguments: `(browser, info)`
+
+`info` fields:
+
+- `url`: attempted page URL
+- `message`: error description
+
+Common causes: wrong URL, or a cross-origin page without `_bridge.js`.
+
+### `browserError`
+
+Fired when a browser page throws an error.
+
+Bridge captures errors from `window.onerror`, `unhandledrejection`, UI event handlers, `executeCached`, and resource loading, then forwards them to client.
+
+Arguments: `(browser, info)`
+
+`browser` is the `BrowserMp` instance (or `null` if no longer available).
+
+`info` fields:
+
+- `kind`: `"error" | "unhandledrejection" | "handler" | "exec" | "resource"`
+- `message`: error text
+- `stack`: stack trace (if available)
+- `source`: script source URL (for script errors)
+- `lineno`: line number (for script errors)
+- `colno`: column number (for script errors)
+- `event`: UI event name that failed (only for `kind: "handler"`)
+- `browserId`: browser id
+
+### Example
+
+```js title="Client-side"
+const browser = mp.browsers.new("ui/index.html");
+
+mp.events.add("browserCreated", (browser) => {
+  mp.console.logInfo(`Browser created: ${browser?.id ?? "unknown"}`);
+});
+
+mp.events.add("browserError", (browser, info) => {
+  mp.console.logError(`[UI ${info.kind}] ${info.message}`);
+  if (info.stack) mp.console.logError(info.stack);
+});
+
+mp.events.add("browserDomReady", (browser) => {
+  browser.call("app:init", { user: "Adrian" });
+});
+
+mp.events.add("browserLoadError", (browser, info) => {
+  mp.console.logError(`UI failed to load: ${info.url} - ${info.message}`);
+});
+```
+
 ## In Browser Page
 
-```js
+```js title="Client-side"
 mp.events.add("setData", (state) => {
   console.log(state);
 });
