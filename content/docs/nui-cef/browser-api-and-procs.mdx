@@ -60,7 +60,7 @@ Arguments: `(browser, info)`
 ### Example
 
 ```js title="Client-side"
-const browser = mp.browsers.new("ui/index.html");
+const browser = mp.browsers.new("@resource-name/ui/index.html");
 
 mp.events.add("browserCreated", (browser) => {
   mp.console.logInfo(`Browser created: ${browser?.id ?? "unknown"}`);
