@@ -98,6 +98,20 @@ mp.trigger("ui:clicked", "save");
 
 Browser proc calls use timeout-based pending maps on both client and CEF sides.
 
+Use the browser manager APIs to read or change the timeout:
+
+- `mp.browsers.setProcTimeout(ms)`: sets the global proc timeout in milliseconds.
+- `mp.browsers.procTimeout`: gets the current global proc timeout in milliseconds.
+
+```js title="Client-side"
+// Set proc timeout to 15 seconds.
+mp.browsers.setProcTimeout(15000);
+
+// Read current timeout value.
+const currentTimeout = mp.browsers.procTimeout;
+mp.console.logInfo(`Proc timeout: ${currentTimeout}ms`);
+```
+
 Design handlers to return quickly or use RPC directly for long server work.
 
 ## Chat Browser Integration

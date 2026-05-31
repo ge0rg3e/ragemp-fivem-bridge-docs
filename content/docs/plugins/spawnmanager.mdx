@@ -70,6 +70,37 @@ mp.events.add('playerJoin', (player) => {
   </Step>
 </Steps>
 
+## `mp.spawnmanager` API
+
+`spawnmanager` also exposes a client-side controller at `mp.spawnmanager`.
+
+| Member | Type | Description |
+| --- | --- | --- |
+| `mp.spawnmanager.setAutoSpawn(state)` | method | Enables or disables default auto-spawn on resource start. If called before `waitForGameReady` finishes, it cancels the default spawn flow (interactive login use case). |
+| `mp.spawnmanager.autoSpawn` | getter `boolean` | Current auto-spawn state. |
+| `mp.spawnmanager.spawn(info)` | method | Manual spawn. `info = { x, y, z, heading?, model? }`. |
+| `mp.spawnmanager.forceRespawn()` | method | Forces respawn at the last spawn point and resets first-spawn state. |
+| `mp.spawnmanager.spawnPoint` | getter `object` | Current default spawn point (returned as a copy). |
+| `mp.spawnmanager.isSpawning` | getter `boolean` | `true` while a spawn is in progress. |
+| `mp.spawnmanager.hasSpawned` | getter `boolean` | `true` after the first successful spawn. |
+
+### Example
+
+```js title="client/spawnmanager.js"
+if (!mp.spawnmanager.hasSpawned && !mp.spawnmanager.isSpawning) {
+  mp.spawnmanager.spawn({
+    x: -1037.6,
+    y: -2737.8,
+    z: 20.2,
+    heading: 330,
+  });
+}
+
+mp.keys.bind(0x76, false, () => { // F7
+  mp.spawnmanager.forceRespawn();
+});
+```
+
 ## Disable it
 
 ```lua title="fxmanifest.lua"

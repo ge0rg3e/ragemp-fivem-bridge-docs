@@ -226,18 +226,39 @@ mp.world.setWeatherTransition('CLEAR', 'RAIN');
 
 When a player becomes ready, the server pushes the current weather and time so the client starts with the correct world state.
 
-## Player spawn and auto respawn
+## Player spawn, auto spawn, and auto respawn
 
 `player.spawn(position, heading?)` supports an optional heading parameter, matching the RAGE:MP usage shape.
 
+`player.setAutoSpawn(state)` controls default client auto-spawn for that player.
+
 `player.autoRespawnAfterDeath` and `player.setAutoRespawnAfterDeath(enabled)` control whether the player should automatically respawn after death.
 
-<Tabs items={['Spawn', 'Auto respawn', 'Combined usage']}>
+<Tabs items={['Spawn', 'Auto spawn', 'Auto respawn', 'Combined usage']}>
   <Tab value="Spawn">
 
 ```ts title="Spawn with optional heading"
 player.spawn(new mp.Vector3(0, 0, 72));
 player.spawn(new mp.Vector3(0, 0, 72), 180);
+```
+
+  </Tab>
+
+  <Tab value="Auto spawn">
+
+```ts title="Disable default auto-spawn for interactive login"
+mp.events.add('playerReady', (player) => {
+  // Prevent default client auto-spawn while the player is in login flow.
+  player.setAutoSpawn(false);
+});
+```
+
+```ts title="Spawn after login (no intermediate 0,0,72 spawn)"
+function completeLogin(player: PlayerMp) {
+  player.spawn(new mp.Vector3(200, -900, 30), 90);
+  // or:
+  // player.position = new mp.Vector3(200, -900, 30);
+}
 ```
 
   </Tab>
@@ -266,6 +287,8 @@ player.setAutoRespawnAfterDeath(true);
 </Tabs>
 
 <Callout type="info" title="Behavior overview">
+Use `setAutoSpawn(false)` at `playerReady`/connect when your login flow should fully control first spawn, then spawn or move the player after login to avoid an intermediate `0,0,72` spawn.
+
 Use `autoRespawnAfterDeath` to check whether automatic respawn is enabled, and use `setAutoRespawnAfterDeath` to change it.
 </Callout>
 
@@ -361,6 +384,7 @@ console.log(player.dimension);
 | Traffic lights | `mp.world.trafficLights` | Supports `locked` and `state` |
 | IPLs | `requestIpl`, `removeIpl` | Loads or unloads IPLs |
 | Spawn | `player.spawn(position, heading?)` | `heading` is optional |
+| Set auto spawn | `player.setAutoSpawn(state)` | Enables or disables default client auto-spawn for this player |
 | Auto respawn | `player.autoRespawnAfterDeath` | Returns whether auto respawn is enabled |
 | Set auto respawn | `player.setAutoRespawnAfterDeath(enabled)` | Enables or disables auto respawn after death |
 | Remote eval | `player.eval(code)` | Requires `ragemp_allow_remote_eval 1` |
