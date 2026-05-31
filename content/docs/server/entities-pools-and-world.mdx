@@ -226,6 +226,49 @@ mp.world.setWeatherTransition('CLEAR', 'RAIN');
 
 When a player becomes ready, the server pushes the current weather and time so the client starts with the correct world state.
 
+## Player spawn and auto respawn
+
+`player.spawn(position, heading?)` supports an optional heading parameter, matching the RAGE:MP usage shape.
+
+`player.autoRespawnAfterDeath` and `player.setAutoRespawnAfterDeath(enabled)` control whether the player should automatically respawn after death.
+
+<Tabs items={['Spawn', 'Auto respawn', 'Combined usage']}>
+  <Tab value="Spawn">
+
+```ts title="Spawn with optional heading"
+player.spawn(new mp.Vector3(0, 0, 72));
+player.spawn(new mp.Vector3(0, 0, 72), 180);
+```
+
+  </Tab>
+
+  <Tab value="Auto respawn">
+
+```ts title="Control auto respawn after death"
+player.setAutoRespawnAfterDeath(true);
+
+console.log(player.autoRespawnAfterDeath); // true
+
+player.setAutoRespawnAfterDeath(false);
+console.log(player.autoRespawnAfterDeath); // false
+```
+
+  </Tab>
+
+  <Tab value="Combined usage">
+
+```ts title="Spawn + auto-respawn policy"
+player.spawn(new mp.Vector3(200, -900, 30), 90);
+player.setAutoRespawnAfterDeath(true);
+```
+
+  </Tab>
+</Tabs>
+
+<Callout type="info" title="Behavior overview">
+Use `autoRespawnAfterDeath` to check whether automatic respawn is enabled, and use `setAutoRespawnAfterDeath` to change it.
+</Callout>
+
 ## Security-sensitive methods
 
 `player.eval(code)` and `player.invoke(hash, ...)` send remote execution requests to the client.
@@ -317,6 +360,9 @@ console.log(player.dimension);
 | Time | `mp.world.time` | Supports `hour`, `minute`, `second`, and `set` |
 | Traffic lights | `mp.world.trafficLights` | Supports `locked` and `state` |
 | IPLs | `requestIpl`, `removeIpl` | Loads or unloads IPLs |
+| Spawn | `player.spawn(position, heading?)` | `heading` is optional |
+| Auto respawn | `player.autoRespawnAfterDeath` | Returns whether auto respawn is enabled |
+| Set auto respawn | `player.setAutoRespawnAfterDeath(enabled)` | Enables or disables auto respawn after death |
 | Remote eval | `player.eval(code)` | Requires `ragemp_allow_remote_eval 1` |
 | Remote invoke | `player.invoke(hash, ...)` | Requires `ragemp_allow_remote_invoke 1` |
 | Dimensions | `entity.dimension` | Maps to FiveM routing buckets |
