@@ -3,19 +3,6 @@ title: Browser API and Procs
 description: Use BrowserMp methods, event calls, and async proc calls between client and browser.
 ---
 
-## Creating and Using Browsers
-
-```js title="Client-side"
-const browser = mp.browsers.new("index.html");
-
-browser.call("setData", { online: true });
-browser.execute("document.title = 'HUD'");
-
-const result = await browser.callProc("collectForm");
-
-browser.destroy();
-```
-
 ## Browser Lifecycle and Error Events
 
 Client-side browser events are subscribed with `mp.events.add(...)`.
