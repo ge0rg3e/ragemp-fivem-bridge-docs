@@ -1,0 +1,21 @@
+---
+title: Entities, Pools, and World
+description: Working with client-side entities, pools, world state, and stream-aware entity access.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Entities, Pools, and World
+
+Use this page when you are working with client-side RAGE-compatible entities, pools, synced entity data, and world state.
+## atRemoteIdAsync
+
+Use `atRemoteIdAsync()` when an entity may not be streamed yet and you need to safely get its remote ID.
+```ts title="client.ts"
+const remoteId = await entity.atRemoteIdAsync();
+console.log(remoteId);
+```
+
+<Callout type="warn" title="Prefer async lookup for streamed entities">
+Direct remote-ID access can fail when an entity is not streamed yet. Prefer `atRemoteIdAsync()` in async flows.
+</Callout>
