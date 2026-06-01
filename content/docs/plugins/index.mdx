@@ -7,7 +7,7 @@ import { Card, Cards } from 'fumadocs-ui/components/card';
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
 import { Steps, Step } from 'fumadocs-ui/components/steps';
 import { Accordions, Accordion } from 'fumadocs-ui/components/accordion';
-import { FolderSync, FileKey, RadioTower, MapPin, Car, PackagePlus } from 'lucide-react';
+import { FolderSync, FileKey, MapPin, Car, PackagePlus } from 'lucide-react';
 
 # Plugins
 
@@ -23,9 +23,6 @@ The bridge ships with built-in plugins that install compatibility features autom
   </Card>
   <Card title="env-loader" href="/docs/plugins/env-loader" icon={<FileKey />}>
     Loads a resource-level `.env` file and exposes `mp.environment.loadEnv()`.
-  </Card>
-  <Card title="rage-rpc" href="/docs/plugins/rage-rpc" icon={<RadioTower />}>
-    Installs `mp.rpc`, a drop-in RPC layer based on the leonardssh/rage-rpc API.
   </Card>
   <Card title="spawnmanager" href="/docs/plugins/spawnmanager" icon={<MapPin />}>
     Handles player spawning with collision loading and ground-Z support.
@@ -59,7 +56,6 @@ client_scripts {
   'client/index.js',
 }
 
-disable_plugin 'rage-rpc'
 disable_plugin 'vehicle-sync'
 ```
 
@@ -85,7 +81,7 @@ disable_plugin 'spawnmanager'
     Restart the bridge and the consuming resource.
   </Step>
   <Step>
-    Check the console for a log similar to `[bridge:plugins] disabled: rage-rpc`.
+    Check the console for a log similar to `[bridge:plugins] disabled: vehicle-sync`.
   </Step>
 </Steps>
 
@@ -95,13 +91,12 @@ disable_plugin 'spawnmanager'
 | --- | --- | --- |
 | fs-compat | server | `fs-compat` |
 | env-loader | server | `env-loader` |
-| rage-rpc | both | `rage-rpc` |
 | spawnmanager | both | `spawnmanager` |
 | vehicle-sync | both | `vehicle-sync` |
 
 <Accordions>
   <Accordion title="When should I disable a built-in plugin?">
-    Disable one when your resource ships its own replacement. For example, disable `rage-rpc` if you already have a custom RPC layer, or disable `spawnmanager` if your gamemode owns the full spawn flow.
+    Disable one when your resource ships its own replacement. For example, disable `spawnmanager` if your gamemode owns the full spawn flow.
   </Accordion>
   <Accordion title="Can the same system disable third-party plugins?">
     Yes. Third-party plugins are matched against their `bridge_plugin_name` metadata, so the same `disable_plugin 'name'` syntax works.

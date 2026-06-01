@@ -28,7 +28,7 @@ const features = [
     icon: Workflow,
   },
   {
-    title: "RPC and Event Compatibility",
+    title: "Procedure and Event Compatibility",
     description:
       "Use familiar remote patterns with compatibility plugins for real-world game modes.",
     icon: Cable,

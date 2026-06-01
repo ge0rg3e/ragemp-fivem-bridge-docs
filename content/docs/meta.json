@@ -7,7 +7,6 @@
     "server",
     "nui-cef",
     "plugins",
-    "rpc",
     "troubleshooting"
   ]
 }

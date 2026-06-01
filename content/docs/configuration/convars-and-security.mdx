@@ -1,13 +1,12 @@
 ---
 title: Convars and Security
-description: Runtime convars that control RPC exposure, ingress rate limits, and remote execution behavior.
+description: Runtime convars that control ingress rate limits and remote execution behavior.
 ---
 
 ## Security-Related Convars
 
 - `ragemp_allow_remote_eval` (default `0`)
 - `ragemp_allow_remote_invoke` (default `0`)
-- `ragemp_rpc_allowlist` (default empty = allow all names)
 - `ragemp_ingress_rate_limit` (default `100` events/sec per source/event)
 
 ## Example Safe Defaults
@@ -17,11 +16,3 @@ setr ragemp_allow_remote_eval 0
 setr ragemp_allow_remote_invoke 0
 setr ragemp_ingress_rate_limit 100
 ```
-
-## Optional RPC Restriction
-
-```ini
-setr ragemp_rpc_allowlist "bank:getBalance bank:deposit account:getProfile"
-```
-
-If allowlist is set, unlisted RPC procedure names are blocked on server.

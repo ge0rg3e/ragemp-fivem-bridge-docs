@@ -8,13 +8,13 @@ description: How mp.* is built and routed across server, client, and CEF context
 1. Bridge initializes `globalThis.mp`.
 2. Your gamemode code attaches handlers and uses pools/entities.
 3. Bridge translates actions into FiveM primitives (`emitNet`, natives, NUI callbacks).
-4. Built-in plugins extend behavior (`rage-rpc`, `spawnmanager`, `vehicle-sync`, and more).
+4. Built-in plugins extend behavior (`spawnmanager`, `vehicle-sync`, and more).
 
 ## Runtime Contexts
 
-- **Server runtime**: entities, pools, world state, command parsing, RPC server, plugin loading.
+- **Server runtime**: entities, pools, world state, command parsing, plugin loading.
 - **Client runtime**: local player state tracking, input/key handling, browser pool, game native wrappers.
-- **CEF runtime**: `mp.events`, `mp.trigger`, `mp.rpc` for browser pages.
+- **CEF runtime**: `mp.events` and `mp.trigger` for browser pages.
 
 ## Why This Matters
 

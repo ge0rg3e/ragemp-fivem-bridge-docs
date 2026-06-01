@@ -5,6 +5,7 @@ description: Install the bridge as a shared FiveM resource and run your RAGE:MP 
 
 import { File, Folder, Files } from 'fumadocs-ui/components/files';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
 This guide explains how to install `ragemp-fivem-bridge` as a shared FiveM resource and run your RAGE:MP gamemode using `@` imports.
 
@@ -21,9 +22,22 @@ Before you start, make sure you have:
   <Step>
     ## Download the bridge
 
+    <Tabs items={["Download from release", "Build my own"]}>
+    <Tab value="Download from release">
+
     Download `ragemp-fivem-bridge-vx.x.x.zip` from the [latest release](https://github.com/adriantandara/ragemp-fivem-bridge/releases/latest).
 
     Unzip the archive and place the extracted `ragemp-fivem-bridge` folder inside your FiveM `resources` folder.
+
+    </Tab>
+    <Tab value="Build my own">
+
+    1. `git clone https://github.com/adriantandara/ragemp-fivem-bridge.git`
+    2. `pnpm install`
+    3. `pnpm build:resource`
+    4. Copy the resource from `/dist/ragemp-fivem-bridge` to `resources`
+    </Tab>
+    </Tabs>
   </Step>
 
   <Step>
