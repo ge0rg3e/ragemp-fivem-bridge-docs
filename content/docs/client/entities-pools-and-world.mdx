@@ -24,3 +24,20 @@ console.log(remoteId);
 <Callout type="warn" title="Prefer async lookup for streamed entities">
 Direct remote-ID access can fail when an entity is not streamed yet. Prefer `atRemoteIdAsync()` in async flows.
 </Callout>
+
+## `mp.objects.new`
+
+On the client side, `mp.objects.new` accepts an `isNetwork` option to control whether the object is synced with other clients.
+
+- `isNetwork: true` creates a networked object that can stream in and out for other clients.
+- `isNetwork: false` keeps the object local to the current client, so it will not stream in or out for other players.
+
+```ts title="client.ts"
+const object = mp.objects.new(
+  mp.joaat('prop_beachball_02'),
+  new mp.Vector3(0, 0, 72),
+  {
+    isNetwork: true,
+  },
+);
+```
