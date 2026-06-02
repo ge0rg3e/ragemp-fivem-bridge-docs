@@ -8,6 +8,11 @@ import { Callout } from 'fumadocs-ui/components/callout';
 # Entities, Pools, and World
 
 Use this page when you are working with client-side RAGE-compatible entities, pools, synced entity data, and world state.
+
+<Callout type="warn" title="Use `netId` for cross-side vehicle references">
+When you send a vehicle to the server, pass `vehicle.netId` instead of `vehicle.id`. The `id` value is local to the current side, so it will not work reliably on the other side.
+</Callout>
+
 ## atRemoteIdAsync
 
 Use `atRemoteIdAsync()` when an entity may not be streamed yet and you need to safely get its remote ID.

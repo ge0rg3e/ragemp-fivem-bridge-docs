@@ -19,6 +19,10 @@ Use this page when you are working with RAGE-compatible entities, entity pools, 
 The bridge maps RAGE-style server APIs onto FiveM primitives where possible. Some APIs, like dimensions and entity variables, are backed by FiveM routing buckets and state bags.
 </Callout>
 
+<Callout type="warn" title="Use `netId` for cross-side vehicle references">
+When you send a vehicle across a client-server boundary, pass `vehicle.netId` instead of `vehicle.id`. The `id` value is side-local, so the other side cannot reliably resolve it.
+</Callout>
+
 <Cards>
   <Card title="Entity variables" icon={<Database />}>
     Sync custom state on players, vehicles, and other entities using helpers or the `data` proxy.
@@ -157,8 +161,6 @@ mp.events.add('entityDataChange', (entity, key, newValue, oldValue) => {
 
   </Tab>
 </Tabs>
-
-State bag updates are observed and reflected into `entityDataChange`.
 
 <Callout type="info" title="State bags under the hood">
 Entity variables are synchronized through FiveM state bags. Treat them as networked state, not as a replacement for local-only runtime variables.
