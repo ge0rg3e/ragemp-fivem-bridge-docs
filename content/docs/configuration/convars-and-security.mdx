@@ -4,20 +4,8 @@ description: Runtime convars that control ingress rate limits and remote executi
 ---
 
 ## Security-Related Convars
-
-- `ragemp_allow_remote_eval` (default `0`)
-- `ragemp_allow_remote_invoke` (default `0`)
-- `ragemp_ingress_rate_limit` (default `100` events/sec per source/event)
 - `sv_entityLockdown` (`strict`/`relaxed`/`inactive`): hardens entity creation rules.
 
 `strict` is the strongest mode. It blocks client-created entities entirely, including networked client-side objects created with `CreateObject(..., true, ...)`. Use it when you want objects to be authored server-side and visible to everyone, not spawned locally by a client.
 
 This is a security hardening setting: it reduces abuse from clients creating their own world entities.
-
-## Example Safe Defaults
-
-```ini
-setr ragemp_allow_remote_eval 0
-setr ragemp_allow_remote_invoke 0
-setr ragemp_ingress_rate_limit 100
-```
