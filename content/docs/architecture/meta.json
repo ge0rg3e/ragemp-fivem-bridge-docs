@@ -2,6 +2,7 @@
   "title": "Architecture",
   "pages": [
     "index",
-    "packages-and-runtime"
+    "packages-and-runtime",
+    "entity-ids-and-pools"
   ]
 }
