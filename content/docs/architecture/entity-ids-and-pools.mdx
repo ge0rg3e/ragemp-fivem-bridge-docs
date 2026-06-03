@@ -26,15 +26,41 @@ The bridge exposes RAGE:MP-style entity IDs on top of FiveM's networking. Becaus
 FiveM gives every networked entity a **`netId`** (network ID), returned by `NetworkGetNetworkIdFromEntity`. Two facts drive everything below:
 
 - It is a **16-bit** integer, so it ranges from `0` to **`65535`** (2¹⁶ − 1).
-- It is **global across every networked entity** — vehicles, peds, objects, and players all draw from that same pool.
+- It is **one global pool shared by every networked entity**: vehicles, peds, and objects are all assigned IDs from the same space, so no two networked entities ever hold the same `netId` at the same time. It is *not* a separate counter per entity type.
 
-A `netId` stays fixed for the lifetime of its entity, but the moment that entity is destroyed the number is released and **reused** by a future entity. On a long-running server that spawns and removes thousands of entities, these values churn constantly and cycle around the `65535` ceiling.
+A `netId` stays fixed for the lifetime of its entity, but the moment that entity is destroyed the number is released back into that one global pool and **reused** by a future entity of any type. On a long-running server that spawns and removes thousands of entities, these values churn constantly and cycle around the `65535` ceiling.
+
+A player's own server ID (its `source`) is handed out by a separate registry, but the ped that represents that player is an ordinary entity drawn from this same global pool.
 
 That works for FiveM, but it is nothing like RAGE:MP, where each pool hands out small, ordered IDs starting at `0`.
 
 ### Straight from the FiveM source
 
-The server's client registry is the clearest illustration of this pattern. When a client connects, FiveM walks a single 16-bit counter, treats `0xFFFF` (`65535`) as the "invalid" sentinel, wraps back to `1` once it reaches the top, and then scans forward until it finds an ID nobody is using:
+On the server, FiveM keeps a **single, global pool of entity IDs**. The object-ID space is `MaxObjectId = (1 << 16) - 1` (so `65535`), tracked by one shared bitset, and `GetFreeObjectIds` hands out the lowest free ID to whichever entity asks — it never branches on the entity type, so vehicles, peds, and objects all compete for the same numbers:
+
+```cpp title="citizen-server-impl/src/state/ServerGameState.cpp (condensed)"
+// MaxObjectId = (1 << 16) - 1  →  65535, one shared space for every entity
+uint16_t id = 1;
+for (; id < static_cast<uint16_t>(MaxObjectId); id++)
+{
+    // m_objectIdsSent / m_objectIdsUsed are single, global bitsets
+    if (!m_objectIdsSent.test(id) && !m_objectIdsUsed.test(id))
+    {
+        data->objectIds.insert(id);
+        freeIds.push_back(id);
+        m_objectIdsSent.set(id);
+        break; // first free ID in the global pool
+    }
+}
+```
+
+When an entity is destroyed, its ID is returned to that same pool — the source literally comments *"we want to make this object ID return to the global pool"* — so the numbers churn and get reused across all entity types.
+
+<Callout type="info" title="Reference">
+Sources: [`ServerGameState::GetFreeObjectIds`](https://github.com/citizenfx/fivem/blob/ab3ee4506333e02e4beb847c3db5467ae263ee6e/code/components/citizen-server-impl/src/state/ServerGameState.cpp#L4021-L4052) and [`MaxObjectId`](https://github.com/citizenfx/fivem/blob/ab3ee4506333e02e4beb847c3db5467ae263ee6e/code/components/citizen-server-impl/include/state/ServerGameState.h#L1258) — citizenfx/fivem.
+</Callout>
+
+The same wrap-and-reuse pattern shows up in the player (client) registry, which is the clearest place to see the `0xFFFF` sentinel and the scan for a free slot. When a client connects, FiveM walks a 16-bit counter, treats `0xFFFF` (`65535`) as the "invalid" value, wraps back to `1` at the top, and scans forward until it finds a free ID:
 
 ```cpp title="citizen-server-impl/src/ClientRegistry.cpp"
 auto incrementId = [this]()
@@ -58,7 +84,7 @@ while (m_clientsByNetId[m_curNetId].lock())
 client->SetNetId(m_curNetId);
 ```
 
-This snippet is the server-side **client (player) NetID** path specifically, but it captures the whole model: a 16-bit space, `0xFFFF` reserved as invalid, wrap-around at the ceiling, and a linear search for the next free slot. Entity network IDs live in the same 16-bit world.
+This second snippet is the **client (player) NetID** path, separate from entity IDs, but it shows the same model: a 16-bit space, `0xFFFF` reserved as invalid, and a linear search for the next free slot.
 
 <Callout type="info" title="Reference">
 Source: [`ClientRegistry::HandleConnectingClient`](https://github.com/citizenfx/fivem/blob/cc6032bec3569c48097f708419f0690ace0bbe14/code/components/citizen-server-impl/src/ClientRegistry.cpp#L166-L182) — citizenfx/fivem.
