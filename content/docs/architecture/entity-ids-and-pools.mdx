@@ -1,0 +1,132 @@
+---
+title: Entity IDs, Pools, and netId
+description: How the bridge assigns RAGE:MP-style entity IDs on top of FiveM's global netId, and the cross-side rules that come with it.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Entity IDs, Pools, and netId
+
+The bridge exposes RAGE:MP-style entity IDs on top of FiveM's networking. Because the two engines identify entities very differently, every entity carries **three** distinct identifiers. Knowing which one to use prevents the most common cross-side bugs.
+
+## The three identifiers
+
+| Identifier | Scope | Same on all sides? | Use it for |
+| --- | --- | --- | --- |
+| `entity.id` | Local to the current side, per pool | No | Local lookups: `mp.vehicles.at(id)` |
+| `entity.remoteId` | Shared across server + every client | Yes | RAGE:MP cross-side references: `mp.vehicles.atRemoteId(remoteId)` |
+| `entity.netId` | FiveM network ID (raw) | Yes | FiveM interop and native calls |
+
+<Callout type="warn" title="Never send entity.id to the other side">
+`id` is a **local** pool index. The same car is almost always a different `id` on the server than on each client. To reference an entity across the network, send `remoteId` (RAGE:MP style) or `netId` (FiveM style) — never `id`.
+</Callout>
+
+## How FiveM identifies entities
+
+FiveM gives every networked entity a **`netId`** (network ID), returned by `NetworkGetNetworkIdFromEntity`. Two facts drive everything below:
+
+- It is a **16-bit** integer, so it ranges from `0` to **`65535`** (2¹⁶ − 1).
+- It is **global across every networked entity** — vehicles, peds, objects, and players all draw from that same pool.
+
+A `netId` stays fixed for the lifetime of its entity, but the moment that entity is destroyed the number is released and **reused** by a future entity. On a long-running server that spawns and removes thousands of entities, these values churn constantly and cycle around the `65535` ceiling.
+
+That works for FiveM, but it is nothing like RAGE:MP, where each pool hands out small, ordered IDs starting at `0`.
+
+### Straight from the FiveM source
+
+The server's client registry is the clearest illustration of this pattern. When a client connects, FiveM walks a single 16-bit counter, treats `0xFFFF` (`65535`) as the "invalid" sentinel, wraps back to `1` once it reaches the top, and then scans forward until it finds an ID nobody is using:
+
+```cpp title="citizen-server-impl/src/ClientRegistry.cpp"
+auto incrementId = [this]()
+{
+    m_curNetId++;
+
+    // 0xFFFF is a sentinel value for 'invalid' ID
+    // 0 is not a valid ID
+    if (m_curNetId == 0xFFFF)
+    {
+        m_curNetId = 1;
+    }
+};
+
+// in case of overflow, ensure no client is currently using said ID
+while (m_clientsByNetId[m_curNetId].lock())
+{
+    incrementId();
+}
+
+client->SetNetId(m_curNetId);
+```
+
+This snippet is the server-side **client (player) NetID** path specifically, but it captures the whole model: a 16-bit space, `0xFFFF` reserved as invalid, wrap-around at the ceiling, and a linear search for the next free slot. Entity network IDs live in the same 16-bit world.
+
+<Callout type="info" title="Reference">
+Source: [`ClientRegistry::HandleConnectingClient`](https://github.com/citizenfx/fivem/blob/cc6032bec3569c48097f708419f0690ace0bbe14/code/components/citizen-server-impl/src/ClientRegistry.cpp#L166-L182) — citizenfx/fivem.
+</Callout>
+
+## How the bridge re-thinks IDs
+
+To stay faithful to RAGE:MP, the bridge **decouples its own IDs from `netId`** and keeps `netId` as an internal/interop detail only.
+
+### Per-pool, 0-based, recyclable
+
+Every pool (`mp.vehicles`, `mp.peds`, `mp.objects`, `mp.players`, …) owns its own ID space, handed out by a shared **lowest-free allocator**:
+
+- IDs start at `0` and only count up when no freed ID is available.
+- When an entity is destroyed, its ID is **freed** and reused by the next entity that needs one — the lowest free value first.
+- IDs stay small and dense instead of growing forever or wrapping at a hard ceiling.
+
+```ts title="how allocation behaves"
+// Each pool has its own allocator.
+ids.allocate(); // 0
+ids.allocate(); // 1
+ids.allocate(); // 2
+ids.free(1);    // 1 is now reusable
+ids.allocate(); // 1  ← lowest free value, reused
+```
+
+Pools are independent, so a vehicle and a ped can both have `id === 0` at the same time — exactly like RAGE:MP.
+
+### `id` vs `remoteId`
+
+- **`id`** — the local pool index above. On the **server**, `id === remoteId`. On a **client**, `id` is generated locally and will differ from the server's value.
+- **`remoteId`** — the shared identity, identical on the server and on every client. Resolve it with `atRemoteId()` to land on the same entity on the other side.
+
+```ts title="server.ts"
+mp.events.add('giveCar', (player) => {
+  const veh = mp.vehicles.new(mp.joaat('sultan'), player.position);
+  player.call('carReady', [veh.remoteId]); // send remoteId, not id
+});
+```
+
+```ts title="client.ts"
+mp.events.add('carReady', (remoteId) => {
+  const veh = mp.vehicles.atRemoteId(remoteId); // same car, resolved locally
+  if (veh) mp.gui.chat.push(`local id ${veh.id}, remoteId ${veh.remoteId}`);
+});
+```
+
+<Callout type="info" title="netId is still there for FiveM interop">
+When you call a raw FiveM native, or talk to a non-bridge resource, use `entity.netId` — the value FiveM understands. For RAGE:MP-style code inside the bridge, prefer `remoteId` + `atRemoteId()`.
+</Callout>
+
+### Players
+
+Players follow the same model. On join, the server allocates a 0-based recyclable `remoteId` for the player and maps it to FiveM's volatile `source`. That mapping is synced to every client, so `player.id` and `player.remoteId` are clean, small, stable numbers rather than the raw `source`.
+
+## Recycling caveats
+
+<Callout type="warn" title="A freed ID can belong to a different entity later">
+Because IDs are reused, do **not** cache an `id` (or `remoteId`) and assume it still points to the same entity after that entity was destroyed — a freed value can be reassigned to a brand-new entity. Resolve entities fresh each time, or keep the entity reference itself and guard with `mp.<pool>.exists(entity)`.
+</Callout>
+
+<Callout type="info" title="65535 is the 'no remote ID' sentinel">
+A purely local, client-only entity (for example a non-networked `mp.objects.new`) has no shared identity. Internally its `remoteId` is set to `65535` (`INVALID_REMOTE_ID`) to mark "no network identity", so `atRemoteId()` will not resolve it on another side. This deliberately mirrors FiveM, which reserves the same `0xFFFF` (`65535`) value as its "invalid" sentinel in the server client registry.
+</Callout>
+
+## Quick reference
+
+- Local lookup → `mp.<pool>.at(entity.id)`
+- Cross-side, RAGE:MP style → send `remoteId`, resolve with `mp.<pool>.atRemoteId(remoteId)`
+- Cross-side, FiveM interop / natives → use `entity.netId`
+- Never send `entity.id` across the network.
