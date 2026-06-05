@@ -47,6 +47,10 @@ When you send a vehicle across a client-server boundary, pass `vehicle.netId` in
 
 The orphan mode controls what the server should do with an entity when ownership or relevancy changes.
 
+<Callout type="info" title="Safe to set immediately after creation">
+Setting `.orphanMode` (or passing the `orphanMode` option to `mp.vehicles.new`, or calling `setOrphanMode()`) right after spawning a vehicle is safe. The underlying `SET_ENTITY_ORPHAN_MODE` native resolves the entity through the server game state and throws `Tried to access invalid entity` if it runs on a freshly created vehicle that is not networked yet. The bridge guards against this: if the vehicle already has a network id the native is applied immediately, otherwise it is deferred internally until the vehicle becomes networked and then applied with the latest value you set. You do not need to wait or poll for the network id yourself.
+</Callout>
+
 <Tabs items={['Usage', 'Mode IDs']}>
   <Tab value="Usage">
 

@@ -41,3 +41,23 @@ const object = mp.objects.new(
   },
 );
 ```
+
+## Vehicle handling fields
+
+`vehicle.getHandling(field)` and `vehicle.setHandling(field, value)` resolve the correct underlying native automatically from the field name, using the GTA `CHandlingData` Hungarian-notation prefix:
+
+- `vec…` fields (for example `vecCentreOfMassOffset`, `vecInertiaMultiplier`) are vectors — `getHandling` returns an `mp.Vector3`, and `setHandling` accepts an `mp.Vector3`, a `{ x, y, z }` object, or a `[x, y, z]` array.
+- `n…` fields (for example `nInitialDriveGears`) are integers.
+- Everything else (the `f…` fields, for example `fInitialDriveMaxFlatVel`, `fSteeringLock`) is a float.
+
+```ts title="client.ts"
+const force = vehicle.getHandling('fInitialDriveForce'); // number
+const com = vehicle.getHandling('vecCentreOfMassOffset'); // mp.Vector3
+
+vehicle.setHandling('fInitialDriveForce', 0.5);
+vehicle.setHandling('vecCentreOfMassOffset', new mp.Vector3(0, 0, -0.2));
+```
+
+<Callout type="info" title="Vector fields extend the RAGE:MP surface">
+RAGE:MP types `getHandling` as `number | string` and does not return a usable `Vector3` for `vec…` fields. This bridge returns a real `mp.Vector3` for them so you can read and write `CHandlingData` vectors directly; numeric and string values behave the same as on RAGE:MP. `str…` flag fields are read as floats (rarely needed).
+</Callout>
