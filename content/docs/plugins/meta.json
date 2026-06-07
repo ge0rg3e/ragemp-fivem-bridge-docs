@@ -6,6 +6,7 @@
     "env-loader",
     "spawnmanager",
     "vehicle-sync",
+    "world-vehicles",
     "third-party-plugins"
   ]
 }

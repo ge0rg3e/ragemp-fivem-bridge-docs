@@ -7,7 +7,7 @@ import { Card, Cards } from 'fumadocs-ui/components/card';
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
 import { Steps, Step } from 'fumadocs-ui/components/steps';
 import { Accordions, Accordion } from 'fumadocs-ui/components/accordion';
-import { FolderSync, FileKey, MapPin, Car, PackagePlus } from 'lucide-react';
+import { FolderSync, FileKey, MapPin, Car, Globe, PackagePlus } from 'lucide-react';
 
 # Plugins
 
@@ -29,6 +29,9 @@ The bridge ships with built-in plugins that install compatibility features autom
   </Card>
   <Card title="vehicle-sync" href="/docs/plugins/vehicle-sync" icon={<Car />}>
     Keeps cosmetic vehicle state authoritative and replays it to late-streaming clients.
+  </Card>
+  <Card title="world-vehicles" href="/docs/plugins/world-vehicles" icon={<Globe />}>
+    Opt-in. Lets `mp.vehicles.new` spawn server vehicles anywhere on the map, even with no player nearby.
   </Card>
   <Card title="Third-party plugins" href="/docs/plugins/third-party-plugins" icon={<PackagePlus />}>
     Learn how to ship your own plugin as a FiveM resource with bridge metadata.
@@ -87,12 +90,17 @@ disable_plugin 'spawnmanager'
 
 ## Plugin names
 
-| Plugin | Side | Disable name |
-| --- | --- | --- |
-| fs-compat | server | `fs-compat` |
-| env-loader | server | `env-loader` |
-| spawnmanager | both | `spawnmanager` |
-| vehicle-sync | both | `vehicle-sync` |
+| Plugin | Side | Default | Toggle |
+| --- | --- | --- | --- |
+| fs-compat | server | on | `disable_plugin 'fs-compat'` |
+| env-loader | server | on | `disable_plugin 'env-loader'` |
+| spawnmanager | both | on | `disable_plugin 'spawnmanager'` |
+| vehicle-sync | both | on | `disable_plugin 'vehicle-sync'` |
+| world-vehicles | server | off | `bridge_world_vehicles 'yes'` |
+
+<Callout type="info" title="world-vehicles is opt-in">
+  Every built-in plugin is on by default and turned off with `disable_plugin`, except [world-vehicles](/docs/plugins/world-vehicles), which is off by default and turned on with `bridge_world_vehicles 'yes'`.
+</Callout>
 
 <Accordions>
   <Accordion title="When should I disable a built-in plugin?">
