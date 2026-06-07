@@ -1,0 +1,138 @@
+---
+title: world-vehicles
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Accordions, Accordion } from 'fumadocs-ui/components/accordion';
+import { Route, Power, Globe, Car, Timer } from 'lucide-react';
+
+# world-vehicles
+
+`world-vehicles` lets `mp.vehicles.new` create server-side vehicles **anywhere on the map**, even where no player is nearby — the way it works on RAGE:MP.
+
+<Cards>
+  <Card title="Side" icon={<Route />}>Server</Card>
+  <Card title="Default" icon={<Power />}>Disabled (opt-in)</Card>
+  <Card title="Enable name" icon={<Globe />}>`bridge_world_vehicles`</Card>
+  <Card title="Needs" icon={<Timer />}>OneSync (for the setter path)</Card>
+</Cards>
+
+<Callout type="warn" title="Why it exists">
+  On FiveM, a server-created entity needs a client to own and stream it. Plain `CreateVehicle` returns `0` when **no player is within ~424 units** of the spawn point, so `mp.vehicles.new` would return `null` for vehicles spawned far from everyone. RAGE:MP has no such limit. This plugin closes that gap.
+</Callout>
+
+## Enable it
+
+The plugin is **off by default**. Turn it on by adding one line to the bridge resource (recommended) or to your gamemode resource manifest.
+
+<Tabs items={["Bridge resource", "Per gamemode"]}>
+<Tab value="Bridge resource">
+
+```lua title="ragemp-fivem-bridge/fxmanifest.lua"
+fx_version 'cerulean'
+game 'gta5'
+ragemp_bridge 'library'
+
+bridge_world_vehicles 'yes'
+```
+
+</Tab>
+<Tab value="Per gamemode">
+
+```lua title="your-gamemode/fxmanifest.lua"
+fx_version 'cerulean'
+game 'gta5'
+
+server_scripts {
+  '@ragemp-fivem-bridge/server.js',
+  'server/index.js',
+}
+
+bridge_world_vehicles 'yes'
+```
+
+</Tab>
+</Tabs>
+
+On start you will see a log line confirming the mode:
+
+```text
+[plugin:world-vehicles] enabled (setter=yes)
+```
+
+## Use it
+
+Nothing changes in your code. Call `mp.vehicles.new` with any position — including one far from every player.
+
+```js title="server/vehicles.js"
+// Spawns even with no players anywhere near Sandy Shores.
+const veh = mp.vehicles.new('adder', new mp.Vector3(1850.0, 3680.0, 34.2), {
+  heading: 90.0,
+  numberPlate: 'WORLD',
+});
+
+console.log(veh.id, veh.netId); // a real vehicle, networked once it settles
+```
+
+When a player later drives into range, the engine streams the vehicle in and assigns that client as the controller automatically — you never assign controllers by hand.
+
+## Aircraft, boats and other types
+
+The primary path uses `CreateVehicleServerSetter`, which needs the vehicle **type**. Common models are detected automatically, but for anything unusual pass an explicit `vehicleType`.
+
+```js title="server/vehicles.js"
+mp.vehicles.new('dinghy', waterPos, { vehicleType: 'boat' });
+mp.vehicles.new('buzzard', heliPad, { vehicleType: 'heli' });
+```
+
+Valid types: `automobile`, `bike`, `boat`, `heli`, `plane`, `submarine`, `trailer`, `train`, `blimp`. The default is `automobile`.
+
+## How it works
+
+<Steps>
+  <Step>
+    **Primary — server setter.** When `CreateVehicleServerSetter` is available (OneSync), the vehicle is created directly, with no player required, and persisted with orphan mode `KeepEntity` so the server keeps it while it has no owner.
+  </Step>
+  <Step>
+    **Fallback — proximity retry.** When the setter is unavailable, the vehicle is queued at its position and created the moment a player enters range. `mp.vehicles.new` returns a *pending* `VehicleMp` immediately; its handle is bound when it actually spawns.
+  </Step>
+  <Step>
+    **Resolution events.** On the fallback path the bridge fires `vehicleSpawnResolved` (success) or `vehicleSpawnFailed` (abandoned after ~60s with no player ever arriving).
+  </Step>
+</Steps>
+
+```js title="server/vehicles.js"
+mp.events.add('vehicleSpawnResolved', (veh) => {
+  console.log('deferred vehicle is now live:', veh.id, veh.netId);
+});
+```
+
+## Persistence (orphan mode)
+
+While enabled, world vehicles default to orphan mode `2` (`KeepEntity`) so the server does not delete them when no client owns them. Pass `orphanMode` explicitly to override per vehicle.
+
+```js title="server/vehicles.js"
+mp.vehicles.new('adder', pos, { orphanMode: 0 }); // let the engine clean it up normally
+```
+
+## Disable it
+
+Because it is opt-in, simply remove (or comment out) the `bridge_world_vehicles` line. Without the plugin, `mp.vehicles.new` behaves exactly as before: vehicles spawned with no nearby player return `null` with a warning.
+
+<Accordions>
+  <Accordion title="Does this need OneSync?">
+    The primary `CreateVehicleServerSetter` path requires OneSync (Infinity). The bridge already targets OneSync. On servers without it, the proximity-retry fallback handles far spawns instead.
+  </Accordion>
+  <Accordion title="Is there any cost when it is off?">
+    None. The plugin self-gates: if the flag is absent it registers nothing and `mp.vehicles.new` is byte-for-byte unchanged.
+  </Accordion>
+  <Accordion title="What is a pending vehicle?">
+    Only on the fallback path: `mp.vehicles.new` returns a `VehicleMp` whose handle is `0` until a player enters range and it spawns. Properties you set on it are applied when it binds. On a OneSync server (setter available) vehicles are created immediately, so you never get a pending one. Treat `vehicleSpawnResolved` as the "ready" signal if you rely on the fallback.
+  </Accordion>
+  <Accordion title="Why might a far spawn still fail?">
+    On the fallback path, if no player ever comes within range within ~60 seconds the request is abandoned and `vehicleSpawnFailed` fires. With the setter enabled this does not happen.
+  </Accordion>
+</Accordions>
