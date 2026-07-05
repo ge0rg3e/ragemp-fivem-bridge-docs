@@ -139,7 +139,7 @@ export default function Home() {
             Docs made by{" "}
             <a
               className="font-medium text-fd-foreground transition hover:text-fd-primary"
-              href="https://ge0rg3e.is-a.dev"
+              href="https://github.com/ge0rg3e"
               target="_blank"
             >
               Ge0rg3e
